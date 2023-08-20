@@ -8,31 +8,54 @@ import java.util.TimerTask;
 
 public class KeyRunnable extends TimerTask {
 
+    private final RobloxAfker main;
+    private final Robot robot;
+
+    private final boolean randomWalking;
+
     private int lastKey = KeyEvent.VK_F;
-
-    private int a;
-
-    private RobloxAfker main;
-    private Robot robot;
+    private boolean needToRelease = false;
 
     @SneakyThrows
-    public KeyRunnable(RobloxAfker main) {
+    public KeyRunnable(RobloxAfker main, boolean randomWalking) {
         this.main = main;
         this.robot = new Robot();
+        this.randomWalking = randomWalking;
     }
 
-    @SneakyThrows
     @Override
     public void run() {
-        if (a == 1) {
+        if (randomWalking) {
+            randomWalkingRun();
+        } else {
+            autoJumperRun();
+        }
+    }
+
+    public void randomWalkingRun() {
+        if (needToRelease) {
             robot.keyRelease(lastKey);
-            a = 0;
+            this.needToRelease = false;
         }
 
-        int randomKey = numberToKey(getRandom(0, 3));
-        robot.keyPress(randomKey);
-        this.lastKey = randomKey;
-        a = 1;
+        int random = (int) getRandom(0, 3);
+        int numberToKey = numberToKey(random);
+
+        robot.keyPress(numberToKey);
+        this.lastKey = numberToKey;
+        this.needToRelease = true;
+    }
+
+    private void autoJumperRun() {
+        if (this.needToRelease) {
+            robot.keyRelease(lastKey);
+            this.needToRelease = false;
+            return;
+        }
+
+        int key = KeyEvent.VK_SPACE;
+        robot.keyPress(key);
+        this.needToRelease = true;
     }
 
     public static double getRandom(double min, double max) {
@@ -41,17 +64,12 @@ public class KeyRunnable extends TimerTask {
 
     public int numberToKey(double random) {
         int a = (int) random;
-        switch (a) {
-            case 0:
-                return KeyEvent.VK_W;
-            case 1:
-                return KeyEvent.VK_A;
-            case 2:
-                return KeyEvent.VK_S;
-            case 3:
-                return KeyEvent.VK_D;
-            default:
-                return KeyEvent.VK_SPACE;
-        }
+        return switch (a) {
+            case 0 -> KeyEvent.VK_W;
+            case 1 -> KeyEvent.VK_S;
+            case 2 -> KeyEvent.VK_A;
+            case 3 -> KeyEvent.VK_D;
+            default -> KeyEvent.VK_SPACE;
+        };
     }
 }
